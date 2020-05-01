@@ -12,7 +12,7 @@ type ChatServer interface {
 	Listen(address string) error
 	Broadcast(command interface{}) error
 	Start()
-	Close()
+	Close() error
 }
 
 type TcpChatServer struct {
@@ -31,13 +31,13 @@ func (s *TcpChatServer) Listen(address string) error {
 	l, err := net.Listen("tcp", address)
 	if err == nil {
 		s.listener = l
+		log.Printf("Listening on %v", address)
 	}
-	log.Printf("Listening on %v", address)
 	return err
 }
 
-func (s *TcpChatServer) Close() {
-	s.listener.Close()
+func (s *TcpChatServer) Close() error {
+	return s.listener.Close()
 }
 
 func (s *TcpChatServer) Start() {
@@ -86,15 +86,16 @@ func (s *TcpChatServer) serve(client *client) {
 		}
 		if cmd != nil {
 			switch v := cmd.(type) {
-			case protocol.SendCommand:
-				go s.Broadcast(protocol.MessageCommand{
-					Message: v.Message,
-					Name:    client.name,
-				})
+				case protocol.SendCommand:
+					go s.Broadcast(protocol.MessageCommand{
+						Message: v.Message,
+						Name:    client.name,
+					})
 				case protocol.NameCommand:
-				client.name = v.Name
+					client.name = v.Name
 			}
-		}        if err == io.EOF {
+		}
+		if err == io.EOF {
 			break
 		}
 	}

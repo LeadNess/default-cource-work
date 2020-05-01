@@ -23,7 +23,9 @@ type TcpChatClient struct {
 	cmdWriter *protocol.CommandWriter
 	name      string
 	incoming  chan protocol.MessageCommand
-}func NewClient() *TcpChatClient {
+}
+
+func NewClient() *TcpChatClient {
 	return &TcpChatClient{
 		incoming: make(chan protocol.MessageCommand),
 	}
@@ -40,6 +42,7 @@ func (c *TcpChatClient) Dial(address string) error {
 }
 
 func (c *TcpChatClient) Send(command interface{}) error {
+
 	return c.cmdWriter.Write(command)
 }
 

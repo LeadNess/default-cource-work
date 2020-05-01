@@ -1,8 +1,11 @@
 package protocol
 
 import (
+	"bufio"
 	"fmt"
 	"io"
+	"log"
+	"errors"
 )
 
 type SendCommand struct {
@@ -19,6 +22,10 @@ type MessageCommand struct {
 	Message string
 }
 
+type UnknownCommand interface {
+	Error() string
+}
+
 type CommandWriter struct {
 	writer io.Writer
 }
@@ -26,25 +33,6 @@ type CommandWriter struct {
 func NewCommandWriter(writer io.Writer) *CommandWriter {
 	return &CommandWriter{
 		writer: writer,
-	}
-}
-
-type CommandReader struct {
-	reader io.Reader
-}
-
-func (r CommandReader) Read() (p []byte, err error) {
-	buffer := make([]byte, 1024)
-	n, err := r.reader.Read(buffer)
-	if err != nil {
-		return p, err
-	}
-	return buffer[:n], nil
-}
-
-func NewCommandReader(reader io.Reader) *CommandReader {
-	return &CommandReader{
-		reader: reader,
 	}
 }
 
@@ -66,3 +54,36 @@ func (w *CommandWriter) Write(command interface{}) error {
 	return err
 }
 
+type CommandReader struct {
+	reader *bufio.Reader
+}
+
+func NewCommandReader(reader io.Reader) *CommandReader {
+	return &CommandReader{
+		reader: bufio.NewReader(reader),
+	}
+}
+
+func (r *CommandReader) Read() (interface{}, error) {
+	commandName, err := r.reader.ReadString(' ')
+	if err != nil {
+		return nil, err
+	}
+	switch commandName {
+	case "MESSAGE ":
+		user, err := r.reader.ReadString(' ')
+		if err != nil {
+			return nil, err
+		}
+		message, err := r.reader.ReadString('\n')
+		if err != nil {
+			return nil, err
+		}
+		return MessageCommand{
+			user[:len(user)-1],
+			message[:len(message)-1],
+		}, nil    // similar implementation for other commands     default:
+	}
+	log.Printf("Unknown command: %v", commandName)
+	return nil, errors.New("unknown command")
+}

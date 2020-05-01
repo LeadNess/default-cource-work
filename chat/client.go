@@ -1,9 +1,8 @@
 package main
 
-import (
-	"default-cource-work/chat/client"
-)
+import "default-cource-work/chat/client"
 
 func main()  {
-	client.ChatClient()
+	client := client.NewClient()
+	client.Start()
 }
