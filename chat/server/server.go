@@ -2,6 +2,7 @@ package server
 
 import (
 	"default-cource-work/chat/protocol"
+	"errors"
 	"io"
 	"log"
 	"net"
@@ -25,6 +26,16 @@ type client struct {
 	conn   net.Conn
 	name   string
 	writer *protocol.CommandWriter
+}
+
+var (
+	UnknownClient = errors.New("Unknown client")
+)
+
+func NewServer() *TcpChatServer {
+	return &TcpChatServer{
+		mutex: &sync.Mutex{},
+	}
 }
 
 func (s *TcpChatServer) Listen(address string) error {

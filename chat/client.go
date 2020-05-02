@@ -3,6 +3,8 @@ package main
 import "default-cource-work/chat/client"
 
 func main()  {
-	client := client.NewClient()
-	client.Start()
+	c := client.NewClient()
+	c.Dial(":3333")
+	c.Start()
+	c.Send()
 }

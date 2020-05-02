@@ -42,7 +42,6 @@ func (c *TcpChatClient) Dial(address string) error {
 }
 
 func (c *TcpChatClient) Send(command interface{}) error {
-
 	return c.cmdWriter.Write(command)
 }
 
