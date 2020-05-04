@@ -2,16 +2,17 @@ package server
 
 import (
 	"default-cource-work/chat/protocol"
-	"errors"
 	"io"
 	"log"
 	"net"
+	"strings"
 	"sync"
 )
 
 type ChatServer interface {
 	Listen(address string) error
 	Broadcast(command interface{}) error
+	ClientsUsernames() []string
 	Start()
 	Close() error
 }
@@ -27,10 +28,6 @@ type client struct {
 	name   string
 	writer *protocol.CommandWriter
 }
-
-var (
-	UnknownClient = errors.New("Unknown client")
-)
 
 func NewServer() *TcpChatServer {
 	return &TcpChatServer{
@@ -68,6 +65,7 @@ func (s *TcpChatServer) accept(conn net.Conn) *client {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	client := &client{
+		name:   conn.RemoteAddr().String(),
 		conn:   conn,
 		writer: protocol.NewCommandWriter(conn),
 	}
@@ -84,6 +82,9 @@ func (s *TcpChatServer) remove(client *client) {
 		}
 	}
 	log.Printf("Closing connection from %v", client.conn.RemoteAddr().String())
+	go s.Broadcast(protocol.UsersCommand{
+		Users: strings.Join(s.ClientsUsernames(), " "),
+	})
 	client.conn.Close()
 }
 
@@ -104,6 +105,9 @@ func (s *TcpChatServer) serve(client *client) {
 					})
 				case protocol.NameCommand:
 					client.name = v.Name
+					go s.Broadcast(protocol.UsersCommand{
+						Users: strings.Join(s.ClientsUsernames(), " "),
+					})
 			}
 		}
 		if err == io.EOF {
@@ -112,10 +116,19 @@ func (s *TcpChatServer) serve(client *client) {
 	}
 }
 
+func (s *TcpChatServer) ClientsUsernames() []string {
+	var users []string
+	for _, client := range s.clients {
+		users = append(users, client.name)
+	}
+	return users
+}
+
 func (s *TcpChatServer) Broadcast(command interface{}) error {
 	for _, client := range s.clients {
-		// TODO: handle error here?
-		client.writer.Write(command)
+		if err := client.writer.Write(command); err != nil {
+			log.Printf("Broadcast error: %v", err)
+		}
 	}
 	return nil
 }

@@ -2,10 +2,11 @@ package protocol
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"log"
-	"errors"
+	"strings"
 )
 
 type SendCommand struct {
@@ -20,6 +21,10 @@ type NameCommand struct {
 type MessageCommand struct {
 	Name    string
 	Message string
+}
+
+type UsersCommand struct {
+	Users string
 }
 
 type UnknownCommand interface {
@@ -50,6 +55,8 @@ func (w *CommandWriter) Write(command interface{}) error {
 		err = w.writeString(fmt.Sprintf("MESSAGE %v %v\n", v.Name, v.Message))
 	case NameCommand:
 		err = w.writeString(fmt.Sprintf("NAME %v\n", v.Name))
+	case UsersCommand:
+		err = w.writeString(fmt.Sprintf("USERS %v\n", v.Users))
 	}
 	return err
 }
@@ -65,24 +72,35 @@ func NewCommandReader(reader io.Reader) *CommandReader {
 }
 
 func (r *CommandReader) Read() (interface{}, error) {
-	commandName, err := r.reader.ReadString(' ')
+	bufstr, err := r.reader.ReadString('\n')
 	if err != nil {
 		return nil, err
 	}
+	bufslice := strings.Split(bufstr[:len(bufstr)-1], " ")
+	commandName := bufslice[0]
 	switch commandName {
-	case "MESSAGE ":
-		user, err := r.reader.ReadString(' ')
-		if err != nil {
-			return nil, err
-		}
-		message, err := r.reader.ReadString('\n')
-		if err != nil {
-			return nil, err
-		}
+	case "SEND":
+		message := strings.Join(bufslice[1:], " ")
+		return SendCommand{
+			message,
+		}, nil
+	case "MESSAGE":
+		user := bufslice[1]
+		message := strings.Join(bufslice[2:], " ")
 		return MessageCommand{
-			user[:len(user)-1],
-			message[:len(message)-1],
-		}, nil    // similar implementation for other commands     default:
+			user,
+			message,
+		}, nil
+	case "NAME":
+		name := bufslice[1]
+		return NameCommand{
+			name,
+		}, nil
+	case "USERS":
+		users := strings.Join(bufslice[1:], " ")
+		return UsersCommand{
+			users,
+		}, nil
 	}
 	log.Printf("Unknown command: %v", commandName)
 	return nil, errors.New("unknown command")

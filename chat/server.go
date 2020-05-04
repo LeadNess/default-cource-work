@@ -9,4 +9,5 @@ func main()  {
 	s = server.NewServer()
 	s.Listen(":3333")
 	s.Start()
+	defer s.Close()
 }
