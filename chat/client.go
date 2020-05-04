@@ -7,6 +7,7 @@ import (
 	"github.com/marcusolsson/tui-go"
 	"log"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -27,10 +28,8 @@ func main()  {
 
 
 	sidebar := tui.NewVBox()
-	for _, user := range <-c.ChatUsers() {
-		sidebar.Append(tui.NewLabel(user))
-	}
-	sidebar.Append(tui.NewLabel("       "))
+	users := strings.Join(<-c.ChatUsers(), "\n")
+	sidebar.Append(tui.NewLabel(users + "\n    "))
 
 	sidebar.SetTitle("Users")
 	sidebar.SetBorder(true)
@@ -84,19 +83,15 @@ func main()  {
 		}
 	}()
 
-	/*go func() {
+	go func() {
 		for usersSlice := range c.ChatUsers() {
 			ui.Update(func() {
-				sidebar.
-				for i, user := range usersSlice{
-					sidebar.Remove(i)
-					sidebar.Insert(i, tui.NewLabel(user))
-				}
-				sidebar.Remove(len(usersSlice))
-				sidebar.Insert(len(usersSlice), tui.NewLabel("       "))
+				sidebar.Remove(0)
+				users := strings.Join(usersSlice, "\n")
+				sidebar.Append(tui.NewLabel(users + "\n    "))
 			})
 		}
-	}()*/
+	}()
 
 	if err := ui.Run(); err != nil {
 		log.Fatal(err)
