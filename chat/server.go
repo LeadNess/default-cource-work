@@ -1,13 +1,20 @@
 package main
 
 import (
-	"default-cource-work/chat/server"
+	"default-cource-work/chat/tui"
+	"log"
+	"os"
 )
 
 func main()  {
-	var s server.ChatServer
-	s = server.NewServer()
-	s.Listen(":3333")
-	s.Start()
-	defer s.Close()
+	server := tui.RunServerUI()
+	if server == nil {
+		os.Exit(0)
+	}
+	ui := tui.ServerLogsUI(server)
+	if err := ui.Run(); err != nil {
+		log.Fatal(err)
+	}
+	server.Start()
+	defer server.Close()
 }

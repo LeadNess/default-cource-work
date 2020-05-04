@@ -2,11 +2,13 @@ package server
 
 import (
 	"default-cource-work/chat/protocol"
+	"fmt"
 	"io"
 	"log"
 	"net"
 	"strings"
 	"sync"
+	"time"
 )
 
 type ChatServer interface {
@@ -15,12 +17,16 @@ type ChatServer interface {
 	ClientsUsernames() []string
 	Start()
 	Close() error
+	Logs() chan string
+	Clients() chan []string
 }
 
 type TcpChatServer struct {
 	listener net.Listener
-	clients []*client
-	mutex   *sync.Mutex
+	clients  []*client
+	mutex    *sync.Mutex
+	logs     chan string
+	clientsNames  chan []string
 }
 
 type client struct {
@@ -32,6 +38,8 @@ type client struct {
 func NewServer() *TcpChatServer {
 	return &TcpChatServer{
 		mutex: &sync.Mutex{},
+		logs: make(chan string),
+		clientsNames: make(chan []string),
 	}
 }
 
@@ -39,7 +47,8 @@ func (s *TcpChatServer) Listen(address string) error {
 	l, err := net.Listen("tcp", address)
 	if err == nil {
 		s.listener = l
-		log.Printf("Listening on %v", address)
+		s.logs <- fmt.Sprintf("%s Listening on %v",
+			time.Now().Format("15:04"), address)
 	}
 	return err
 }
@@ -61,7 +70,8 @@ func (s *TcpChatServer) Start() {
 }
 
 func (s *TcpChatServer) accept(conn net.Conn) *client {
-	log.Printf("Accepting connection from %v, total clients: %v", conn.RemoteAddr().String(), len(s.clients)+1)
+	s.logs <- fmt.Sprintf("%s Accepting connection from %v, total clients: %v",
+		time.Now().Format("15:04"), conn.RemoteAddr().String(), len(s.clients)+1)
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	client := &client{
@@ -81,10 +91,15 @@ func (s *TcpChatServer) remove(client *client) {
 			s.clients = append(s.clients[:i], s.clients[i+1:]...)
 		}
 	}
-	log.Printf("Closing connection from %v", client.conn.RemoteAddr().String())
+	s.logs <- fmt.Sprintf("%s Closing connection from %v",
+		time.Now().Format("15:04"), client.conn.RemoteAddr().String())
+
+	clientsNames := s.ClientsUsernames()
+	s.clientsNames <- clientsNames
 	go s.Broadcast(protocol.UsersCommand{
-		Users: strings.Join(s.ClientsUsernames(), " "),
+		Users: strings.Join(clientsNames, " "),
 	})
+
 	client.conn.Close()
 }
 
@@ -94,7 +109,8 @@ func (s *TcpChatServer) serve(client *client) {
 	for {
 		cmd, err := cmdReader.Read()
 		if err != nil && err != io.EOF {
-			log.Printf("Read error: %v", err)
+			s.logs <- fmt.Sprintf("%s Read error: %v",
+				time.Now().Format("15:04"), err)
 		}
 		if cmd != nil {
 			switch v := cmd.(type) {
@@ -105,8 +121,10 @@ func (s *TcpChatServer) serve(client *client) {
 					})
 				case protocol.NameCommand:
 					client.name = v.Name
+					clientsNames := s.ClientsUsernames()
+					s.clientsNames <- clientsNames
 					go s.Broadcast(protocol.UsersCommand{
-						Users: strings.Join(s.ClientsUsernames(), " "),
+						Users: strings.Join(clientsNames, " "),
 					})
 			}
 		}
@@ -131,4 +149,12 @@ func (s *TcpChatServer) Broadcast(command interface{}) error {
 		}
 	}
 	return nil
+}
+
+func (s *TcpChatServer) Logs() chan string {
+	return s.logs
+}
+
+func (s *TcpChatServer) Clients() chan []string {
+	return s.clientsNames
 }
