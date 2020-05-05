@@ -9,7 +9,9 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
+	"unicode"
 )
 
 type Cell struct {
@@ -50,6 +52,32 @@ func ParseEthHeader(bytes []byte) (*EthHeader, error) {
 	}, nil
 }
 
+func ParseInt16(s string) (int16, error) {
+	var buf strings.Builder
+	str := []rune(s)
+	for c := range str {
+		if unicode.IsNumber(str[c]) {
+			buf.WriteRune(str[c])
+		}
+	}
+	num, err := strconv.ParseInt(buf.String(), 10, 16)
+	if err != nil {
+		return 0, err
+	}
+	return int16(num), nil
+}
+
+func ParseFloat(s string) (float64, error) {
+	var buf strings.Builder
+	str := []rune(s)
+	for c := range str {
+		if unicode.IsNumber(str[c]) || str[c] == ',' || str[c] == '.' {
+			buf.WriteRune(str[c])
+		}
+	}
+	return strconv.ParseFloat(buf.String(), 16)
+}
+
 func GetHandle(device, filter string) (*pcap.Handle, error) {
 	if handle, err := pcap.OpenLive(device, 1600, true, pcap.BlockForever); err != nil {
 		return nil, err
@@ -80,8 +108,8 @@ func main()  {
 	fmt.Println("+---+---------------------+-----------------+----------+")
 	fmt.Printf("|   | %-20s| %-16s| %-9s|\n", "Name", "IP", "Netmask")
 	fmt.Println("+---+---------------------+-----------------+----------+")
-	numToDev := make(map[int64]string, len(devices))
-	var counter int64
+	numToDev := make(map[int16]string, len(devices))
+	var counter int16
 	for _, dev := range devices {
 		if len(dev.Addresses) > 0 {
 			counter++
@@ -90,17 +118,17 @@ func main()  {
 			numToDev[counter] = dev.Name
 		}
 	}
-	var firstDevNum, secondDevNum int64
+	var firstDevNum, secondDevNum int16
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Device 1: ")
 	buf, _ := reader.ReadString('\n')
-	if firstDevNum, err = strconv.ParseInt(buf[:len(buf)-1], 10, 16); err != nil {
+	if firstDevNum, err = ParseInt16(buf); err != nil {
 		log.Printf("Error on parsing string to int: %v", err)
 		os.Exit(1)
 	}
 	fmt.Print("Device 2: ")
 	buf, _ = reader.ReadString('\n')
-	if secondDevNum, err = strconv.ParseInt(buf[:len(buf)-1], 10, 16); err != nil {
+	if secondDevNum, err = ParseInt16(buf); err != nil {
 		log.Printf("Error on parsing string to int: %v", err)
 		os.Exit(1)
 	}
@@ -108,17 +136,15 @@ func main()  {
 	var cellTTL float64
 	fmt.Print("Cells TTL: ")
 	buf, _ = reader.ReadString('\n')
-	if cellTTL, err = strconv.ParseFloat(buf[:len(buf)-1], 16); err != nil {
+	if cellTTL, err = ParseFloat(buf); err != nil {
 		log.Printf("Error on parsing string to float: %v", err)
 		os.Exit(1)
 	}
 
 	var filter string
 	fmt.Print("Capture filter: ")
-	buf, _ = reader.ReadString('\n')
-	if len(buf) == 1 {
+	filter, _ = reader.ReadString('\n')
 
-	}
 	firstPortHandler, err := GetHandle(numToDev[firstDevNum], filter)
 	if err != nil {
 		log.Printf("Error on opening first device: %v", err)
@@ -203,9 +229,9 @@ func main()  {
 		fmt.Println("2. Print packages count")
 		fmt.Println("3. Exit")
 		fmt.Print("Option: ")
-		var option int64
+		var option int16
 		buf, _ := reader.ReadString('\n')
-		if option, err = strconv.ParseInt(buf[:len(buf)-1], 10, 16); err != nil {
+		if option, err = ParseInt16(buf); err != nil {
 			log.Printf("Error on parsing option: %v", err)
 			continue
 		}
