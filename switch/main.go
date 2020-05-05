@@ -25,7 +25,7 @@ func NewSwitchingTable(size uint16) SwitchingTable {
 	return make(map[string]Cell, size)
 }
 
-func (table SwitchingTable) ContainMAC(mac []byte) bool {
+func (table SwitchingTable) ContainsMAC(mac []byte) bool {
 	 key := string(mac)
 	 for cellKey := range table {
 	 	if cellKey == key {
@@ -99,7 +99,7 @@ func PrintSwitchingTable(table SwitchingTable)  {
 	}
 }
 
-func main()  {
+func main() {
 	devices, err := pcap.FindAllDevs()
 	if err != nil {
 		log.Printf("Error on finding all devices: %v", err)
@@ -166,17 +166,18 @@ func main()  {
 				log.Printf("Error on parsing packet: %v", err)
 				continue
 			}
-			if swTable.ContainMAC(eth.SrcMAC) {
+			if swTable.ContainsMAC(eth.SrcMAC) {
 				if swTable[string(eth.SrcMAC)].Port == 1 {
+					//fmt.Printf("IF PORT == 1 %d  -  %v\n\n", 1, packet)
 					if err = secondPortHandler.WritePacketData(packet.Data()); err != nil {
 						log.Printf("Error on sending packet: %v", err)
 						continue
 					}
-					firstPortCounter++
 				}
+				firstPortCounter++
 			} else {
 				swTable[string(eth.SrcMAC)] = Cell{1, time.Now()}
-				if err = firstPortHandler.WritePacketData(packet.Data()); err != nil {
+				if err = secondPortHandler.WritePacketData(packet.Data()); err != nil {
 					log.Printf("Error on sending packet: %v", err)
 					continue
 				}
@@ -192,7 +193,7 @@ func main()  {
 				log.Printf("Error on parsing packet: %v", err)
 				continue
 			}
-			if swTable.ContainMAC(eth.SrcMAC) {
+			if swTable.ContainsMAC(eth.SrcMAC) {
 				if swTable[string(eth.SrcMAC)].Port == 2 {
 					if err = firstPortHandler.WritePacketData(packet.Data()); err != nil {
 						log.Printf("Error on sending packet: %v", err)
@@ -202,7 +203,7 @@ func main()  {
 				}
 			} else {
 				swTable[string(eth.SrcMAC)] = Cell{2, time.Now()}
-				if err = secondPortHandler.WritePacketData(packet.Data()); err != nil {
+				if err = firstPortHandler.WritePacketData(packet.Data()); err != nil {
 					log.Printf("Error on sending packet: %v", err)
 					continue
 				}
@@ -223,8 +224,7 @@ func main()  {
 		}
 	}()
 
-	running := true
-	for running {
+	for {
 		fmt.Println("\n1. Print switching table")
 		fmt.Println("2. Print packages count")
 		fmt.Println("3. Exit")
@@ -239,14 +239,14 @@ func main()  {
 		case 1:
 			PrintSwitchingTable(swTable)
 		case 2:
-			fmt.Printf("\nFirst port: %d\n", firstDevNum)
-			fmt.Printf("Second port: %d\n", secondDevNum)
+			fmt.Printf("\nFirst port: %d\n", firstPortCounter)
+			fmt.Printf("Second port: %d\n", secondPortCounter)
 		case 3:
 			fmt.Println("Total count")
-			fmt.Printf("\nFirst port: %d\n", firstDevNum)
-			fmt.Printf("Second port: %d\n", secondDevNum)
+			fmt.Printf("\nFirst port: %d\n", firstPortCounter)
+			fmt.Printf("Second port: %d\n", secondPortCounter)
 			fmt.Println("Bye!")
-			running = false
+			return
 		}
 	}
 }

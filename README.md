@@ -3,4 +3,4 @@
  Structure:
 - Dual port switch
 - Simple UDP server
-- Simple TCP char with tui
+- Simple TCP chat with tui
