@@ -12,9 +12,9 @@ func main()  {
 		os.Exit(0)
 	}
 	ui := tui.ServerLogsUI(server)
+	go server.Start()
+	defer server.Close()
 	if err := ui.Run(); err != nil {
 		log.Fatal(err)
 	}
-	server.Start()
-	defer server.Close()
 }

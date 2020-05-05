@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/marcusolsson/tui-go"
 	"log"
+	"os"
 )
 
 var serverLogo = `
@@ -59,7 +60,10 @@ func RunServerUI() *server.TcpChatServer {
 		log.Fatal(err)
 	}
 
-	ui.SetKeybinding("Esc", func() { ui.Quit() })
+	ui.SetKeybinding("Esc", func() {
+		ui.Quit()
+		os.Exit(0)
+	})
 
 	chatServer := server.NewServer()
 

@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"github.com/marcusolsson/tui-go"
 	"log"
+	"os"
 	"strings"
 )
 
 func ServerLogsUI(chatServer *server.TcpChatServer) tui.UI {
 	sidebar := tui.NewVBox()
 	users := strings.Join(chatServer.ClientsUsernames(), "\n")
-	sidebar.Append(tui.NewLabel(users + "\n    "))
+	sidebar.Append(tui.NewLabel(users + "\n       "))
 
 	sidebar.SetTitle("Clients")
 	sidebar.SetBorder(true)
@@ -23,6 +24,7 @@ func ServerLogsUI(chatServer *server.TcpChatServer) tui.UI {
 
 	historyBox := tui.NewVBox(historyScroll)
 	historyBox.SetBorder(true)
+	historyBox.SetTitle("Logs")
 
 	logs := tui.NewVBox(historyBox)
 	logs.SetSizePolicy(tui.Expanding, tui.Expanding)
@@ -34,7 +36,10 @@ func ServerLogsUI(chatServer *server.TcpChatServer) tui.UI {
 		log.Fatal(err)
 	}
 
-	ui.SetKeybinding("Esc", func() { ui.Quit() })
+	ui.SetKeybinding("Esc", func() {
+		ui.Quit()
+		os.Exit(0)
+	})
 
 	go func() {
 		for logString := range chatServer.Logs() {
@@ -48,11 +53,15 @@ func ServerLogsUI(chatServer *server.TcpChatServer) tui.UI {
 	}()
 
 	go func() {
-		for usersSlice := range chatServer.Clients() {
+		for clients := range chatServer.Clients() {
 			ui.Update(func() {
 				sidebar.Remove(0)
-				users := strings.Join(usersSlice, "\n")
-				sidebar.Append(tui.NewLabel(users + "\n    "))
+				var buf strings.Builder
+				for _, client := range clients {
+					buf.WriteString(fmt.Sprintf("%s [%s]\n",
+						client.Name, client.Conn.RemoteAddr().String()))
+				}
+				sidebar.Append(tui.NewLabel(buf.String()))
 			})
 		}
 	}()

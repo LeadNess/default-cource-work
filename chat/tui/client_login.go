@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/marcusolsson/tui-go"
 	"log"
+	"os"
 )
 
 var clientLogo = `
@@ -61,7 +62,10 @@ func LoginWindowUI() *client.TcpChatClient {
 		log.Fatal(err)
 	}
 
-	ui.SetKeybinding("Esc", func() { ui.Quit() })
+	ui.SetKeybinding("Esc", func() {
+		ui.Quit()
+		os.Exit(0)
+	})
 	chatClient := client.NewClient()
 	connect.OnActivated(func(b *tui.Button) {
 		if err := chatClient.Dial(address.Text()); err != nil {

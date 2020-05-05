@@ -18,7 +18,7 @@ type ChatServer interface {
 	Start()
 	Close() error
 	Logs() chan string
-	Clients() chan []string
+	Clients() chan []*client
 }
 
 type TcpChatServer struct {
@@ -26,20 +26,20 @@ type TcpChatServer struct {
 	clients  []*client
 	mutex    *sync.Mutex
 	logs     chan string
-	clientsNames  chan []string
+	clientsChan chan []*client
 }
 
 type client struct {
-	conn   net.Conn
-	name   string
+	Conn   net.Conn
+	Name   string
 	writer *protocol.CommandWriter
 }
 
 func NewServer() *TcpChatServer {
 	return &TcpChatServer{
 		mutex: &sync.Mutex{},
-		logs: make(chan string),
-		clientsNames: make(chan []string),
+		logs: make(chan string, 10),
+		clientsChan: make(chan []*client),
 	}
 }
 
@@ -75,8 +75,8 @@ func (s *TcpChatServer) accept(conn net.Conn) *client {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	client := &client{
-		name:   conn.RemoteAddr().String(),
-		conn:   conn,
+		Name:   conn.RemoteAddr().String(),
+		Conn:   conn,
 		writer: protocol.NewCommandWriter(conn),
 	}
 	s.clients = append(s.clients, client)
@@ -92,19 +92,18 @@ func (s *TcpChatServer) remove(client *client) {
 		}
 	}
 	s.logs <- fmt.Sprintf("%s Closing connection from %v",
-		time.Now().Format("15:04"), client.conn.RemoteAddr().String())
+		time.Now().Format("15:04"), client.Conn.RemoteAddr().String())
 
-	clientsNames := s.ClientsUsernames()
-	s.clientsNames <- clientsNames
+	s.clientsChan <- s.clients
 	go s.Broadcast(protocol.UsersCommand{
-		Users: strings.Join(clientsNames, " "),
+		Users: strings.Join(s.ClientsUsernames(), " "),
 	})
 
-	client.conn.Close()
+	client.Conn.Close()
 }
 
 func (s *TcpChatServer) serve(client *client) {
-	cmdReader := protocol.NewCommandReader(client.conn)
+	cmdReader := protocol.NewCommandReader(client.Conn)
 	defer s.remove(client)
 	for {
 		cmd, err := cmdReader.Read()
@@ -117,14 +116,13 @@ func (s *TcpChatServer) serve(client *client) {
 				case protocol.SendCommand:
 					go s.Broadcast(protocol.MessageCommand{
 						Message: v.Message,
-						Name:    client.name,
+						Name:    client.Name,
 					})
 				case protocol.NameCommand:
-					client.name = v.Name
-					clientsNames := s.ClientsUsernames()
-					s.clientsNames <- clientsNames
+					client.Name = v.Name
+					s.clientsChan <- s.clients
 					go s.Broadcast(protocol.UsersCommand{
-						Users: strings.Join(clientsNames, " "),
+						Users: strings.Join(s.ClientsUsernames(), " "),
 					})
 			}
 		}
@@ -137,7 +135,7 @@ func (s *TcpChatServer) serve(client *client) {
 func (s *TcpChatServer) ClientsUsernames() []string {
 	var users []string
 	for _, client := range s.clients {
-		users = append(users, client.name)
+		users = append(users, client.Name)
 	}
 	return users
 }
@@ -155,6 +153,6 @@ func (s *TcpChatServer) Logs() chan string {
 	return s.logs
 }
 
-func (s *TcpChatServer) Clients() chan []string {
-	return s.clientsNames
+func (s *TcpChatServer) Clients() chan []*client {
+	return s.clientsChan
 }
