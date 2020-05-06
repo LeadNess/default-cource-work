@@ -1,9 +1,9 @@
 package main
 
 import (
+	"./tracker"
 	"bufio"
 	"bytes"
-	"default-cource-work/tracker/tracker"
 	"fmt"
 	"github.com/google/gopacket"
 	"log"

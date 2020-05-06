@@ -1,7 +1,7 @@
 package client
 
 import (
-	"default-cource-work/chat/protocol"
+	"../protocol"
 	"io"
 	"log"
 	"net"

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"default-cource-work/chat/tui"
+	"./tui"
 	"log"
 	"os"
 )
