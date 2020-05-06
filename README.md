@@ -2,5 +2,6 @@
  
  Structure:
 - Dual port switch
-- Simple UDP server
+- Simple UDP echo server
 - Simple TCP chat with tui
+- Network traffic monitoring and modification tool
