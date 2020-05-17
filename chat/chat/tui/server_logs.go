@@ -1,7 +1,7 @@
 package tui
 
 import (
-	"default-cource-work/chat/server"
+	"../server"
 	"fmt"
 	"github.com/marcusolsson/tui-go"
 	"log"

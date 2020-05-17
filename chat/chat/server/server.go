@@ -1,7 +1,7 @@
 package server
 
 import (
-	"default-cource-work/chat/protocol"
+	"../protocol"
 	"fmt"
 	"io"
 	"log"

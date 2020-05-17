@@ -73,8 +73,8 @@ func main()  {
 		if packet.TransportLayer() != nil && packet.TransportLayer().LayerType().String() == "UDP" {
 			p := tracker.NewPacket(packet.Data())
 			if bytes.Compare(p.SrcIPv4, A.IPv4) == 0 && bytes.Compare(p.SrcPort, A.Port) == 0 {
-				p.SetSrcIPv4(B.IPv4)
-				p.SetSrcPort(B.Port)
+				p.SrcIPv4 = B.IPv4
+				p.SrcPort = B.Port
 				if err = handler.WritePacketData(p.Data); err != nil {
 					log.Printf("Error on sending packet: %v", err)
 				} else {
@@ -84,8 +84,8 @@ func main()  {
 				}
 			}
 			if bytes.Compare(p.SrcIPv4, D.IPv4) == 0 && bytes.Compare(p.SrcPort, D.Port) == 0 {
-				p.SetDstIPv4(A.IPv4)
-				p.SetDstPort(A.Port)
+				p.DstIPv4 = A.IPv4
+				p.DstPort = A.Port
 				if err = handler.WritePacketData(p.Data); err != nil {
 					log.Printf("Error on sending packet: %v", err)
 				} else {

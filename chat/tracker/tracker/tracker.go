@@ -36,9 +36,9 @@ func NewComputer(ipv4 string, port uint16) (*Computer, error) {
 }
 
 type PacketData struct {
-	Data    []byte
-	DstMAC  []byte
-	SrcMAC  []byte
+	Data []byte
+	DstMAC []byte
+	SrcMAC []byte
 	DstIPv4 []byte
 	SrcIPv4 []byte
 	DstPort []byte
@@ -47,42 +47,14 @@ type PacketData struct {
 
 func NewPacket(pkData []byte) *PacketData {
 	return &PacketData{
-		Data:    pkData,
-		DstMAC:  pkData[0:6],
-		SrcMAC:  pkData[6:12],
+		Data: pkData,
+		DstMAC: pkData[0:6],
+		SrcMAC: pkData[6:12],
 		DstIPv4: pkData[30:34],
 		SrcIPv4: pkData[26:30],
 		DstPort: pkData[36:38],
 		SrcPort: pkData[34:36],
 	}
-}
-
-func (p *PacketData) SetSrcIPv4(ip []byte)  {
-	p.SrcIPv4 =  ip
-	p.Data[26] = ip[0]
-	p.Data[27] = ip[1]
-	p.Data[28] = ip[2]
-	p.Data[29] = ip[3]
-}
-
-func (p *PacketData) SetDstIPv4(ip []byte)  {
-	p.DstIPv4 =  ip
-	p.Data[30] = ip[0]
-	p.Data[31] = ip[1]
-	p.Data[32] = ip[2]
-	p.Data[33] = ip[3]
-}
-
-func (p *PacketData) SetSrcPort(port []byte)  {
-	p.SrcPort =  port
-	p.Data[34] = port[0]
-	p.Data[35] = port[1]
-}
-
-func (p *PacketData) SetDstPort(port []byte)  {
-	p.DstPort =  port
-	p.Data[36] = port[0]
-	p.Data[37] = port[1]
 }
 
 func GetHandle(device, filter string, snapLen int32) (*pcap.Handle, error) {
