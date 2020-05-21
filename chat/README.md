@@ -1,12 +1,3 @@
-<<<<<<< HEAD
-# Computer networks course work
- 
- Structure:
-- Dual port switch
-- Simple UDP echo server
-- Simple TCP chat with tui
-- Network traffic monitoring and modification tool
-=======
 # TCP Chat
 
 ### Description
@@ -24,4 +15,3 @@ To connect as client:
 - ```go run client.go```
 - enter username and server address in tui window
 - press '[Connect]' button
->>>>>>> Add chat to git
