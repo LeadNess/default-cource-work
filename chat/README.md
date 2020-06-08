@@ -15,3 +15,6 @@ To connect as client:
 - ```go run client.go```
 - enter username and server address in tui window
 - press '[Connect]' button
+
+Toggle between buttons by 'Tab'  
+Close TUI by 'Esc'
