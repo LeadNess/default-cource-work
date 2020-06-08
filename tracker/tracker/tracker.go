@@ -116,6 +116,21 @@ func ParseInt16(s string) (int16, error) {
 	return int16(num), nil
 }
 
+func ParseUint16(s string) (uint16, error) {
+	var buf strings.Builder
+	str := []rune(s)
+	for c := range str {
+		if unicode.IsNumber(str[c]) {
+			buf.WriteRune(str[c])
+		}
+	}
+	num, err := strconv.ParseUint(buf.String(), 10, 16)
+	if err != nil {
+		return 0, err
+	}
+	return uint16(num), nil
+}
+
 func GetDeviceName() (string, error) {
 	devices, err := pcap.FindAllDevs()
 	if err != nil {
@@ -158,7 +173,6 @@ func GetPcapFileWriter(snapLen uint32, promptStr string) (*pcapgo.Writer, error)
 	if err := w.WriteFileHeader(snapLen, layers.LinkTypeEthernet); err != nil {
 		return nil, err
 	}
-	defer f.Close()
 	return w, nil
 }
 
@@ -175,8 +189,16 @@ func GetConfig(cfgFileName string) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	cfgFmt := "ipA = %s\nportA = %d\nipB = %s\nportB = %d\nipD = %s\nportD = %d"
-	_, err = fmt.Sscanf(string(cfg), cfgFmt,
-		cfgMap["ipA"], cfgMap["portA"], cfgMap["ipB"], cfgMap["portB"], cfgMap["ipD"], cfgMap["portD"])
+	lines := strings.Split(string(cfg), "\n")
+
+	cfgMap["ipA"] = strings.Split(lines[0], " = ")[1]
+	cfgMap["portA"], err = ParseUint16(strings.Split(lines[1], " = ")[1])
+
+	cfgMap["ipB"] = strings.Split(lines[2], " = ")[1]
+	cfgMap["portB"], err = ParseUint16(strings.Split(lines[3], " = ")[1])
+
+	cfgMap["ipD"] = strings.Split(lines[4], " = ")[1]
+	cfgMap["portD"], err = ParseUint16(strings.Split(lines[5], " = ")[1])
+
 	return cfgMap, err
 }

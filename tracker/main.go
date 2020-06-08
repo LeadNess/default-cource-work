@@ -51,7 +51,7 @@ func main()  {
 	cfgFileName := "tracker.cfg"
 	var cfgMap map[string]interface{}
 	if cfgMap, err = tracker.GetConfig(cfgFileName); err != nil {
-		log.Printf("Error: %v", err)
+		log.Printf("Error on getting config: %v", err)
 		os.Exit(1)
 	}
 
@@ -60,7 +60,7 @@ func main()  {
 		log.Printf("Error on creating A computer instance: %v", err)
 		os.Exit(1)
 	}
-	if B, err = tracker.NewComputer(cfgMap["ipC"].(string), cfgMap["portC"].(uint16)); err != nil {
+	if B, err = tracker.NewComputer(cfgMap["ipB"].(string), cfgMap["portB"].(uint16)); err != nil {
 		log.Printf("Error on creating B computer instance: %v", err)
 		os.Exit(1)
 	}
