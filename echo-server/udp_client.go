@@ -30,8 +30,7 @@ func parseArgsServer() (address string, err error) {
 		}
 	}
 	if len(os.Args) == 2 || len(os.Args) > 3 {
-		fmt.Printf("Usage %s: <address> <port>\n", filepath.Base(os.Args[0]))
-		os.Exit(1)
+		log.Fatalf("Usage %s: <address> <port>\n", filepath.Base(os.Args[0]))
 	}
 
 	address = fmt.Sprintf("%s:%d", address, port)
@@ -42,19 +41,16 @@ func main() {
 	address, err := parseArgsServer()
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 
 	raddr, err := net.ResolveUDPAddr("udp", address)
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 
 	conn, err := net.DialUDP("udp", nil, raddr)
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 	defer conn.Close()
 
@@ -69,13 +65,11 @@ func main() {
 		message, _ := reader.ReadString('\n')
 		if _, err := fmt.Fprint(conn, message); err != nil {
 			log.Fatal(err)
-			os.Exit(1)
 		}
 
 		n, err := conn.Read(buffer)
 		if err != nil {
 			log.Fatal(err)
-			os.Exit(1)
 		}
 		fmt.Printf("Received message: %s", buffer[:n])
 	}

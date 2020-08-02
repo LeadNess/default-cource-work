@@ -13,7 +13,7 @@ import (
 func parseArgsClient() (address string, port int, err error) {
 	const cfgFilename = "upd_server.cfg"
 	if len(os.Args) == 1 {
-		cfg, err := ioutil.ReadFile("upd_server.cfg")
+		cfg, err := ioutil.ReadFile(cfgFilename)
 		if err != nil {
 			return address, port, err
 		}
@@ -27,8 +27,7 @@ func parseArgsClient() (address string, port int, err error) {
 		}
 	}
 	if len(os.Args) > 2 {
-		fmt.Printf("Usage %s: <port>\n", filepath.Base(os.Args[0]))
-		os.Exit(1)
+		log.Fatalf("Usage %s: <port>\n", filepath.Base(os.Args[0]))
 	}
 
 	address = fmt.Sprintf("%s:%d", address, port)
@@ -39,7 +38,6 @@ func main() {
 	address, port, err := parseArgsClient()
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 
 	fmt.Printf("Launching server on port %d...\n", port)
@@ -47,7 +45,6 @@ func main() {
 	pc, err := net.ListenPacket("udp", address)
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 	defer pc.Close()
 
@@ -61,7 +58,6 @@ func main() {
 		}
 		if err != nil {
 			log.Fatal(err)
-			os.Exit(1)
 		}
 		fmt.Printf("Received from %s: %s",
 			addr.String(), buffer[:n])
@@ -69,7 +65,6 @@ func main() {
 		n, err = pc.WriteTo(buffer[:n], addr)
 		if err != nil {
 			log.Fatal(err)
-			os.Exit(1)
 		}
 		fmt.Printf("Send to %s: %s",
 			addr.String(), buffer[:n])
