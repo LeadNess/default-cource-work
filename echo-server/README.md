@@ -7,5 +7,5 @@ Coming soon...
 ### Usage
 
 Run in current folder:
-- ```go run server.go``` - runs server
-- ```go run client.go``` - runs client
+- ```go run server.go``` - run server
+- ```go run client.go``` - run client

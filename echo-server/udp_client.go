@@ -11,7 +11,7 @@ import (
 	"strconv"
 )
 
-func parseArgs() (address string, err error) {
+func parseArgsServer() (address string, err error) {
 	const cfgFilename = "upd_client.cfg"
 	var port int
 	if len(os.Args) == 1 {
@@ -39,7 +39,7 @@ func parseArgs() (address string, err error) {
 }
 
 func main() {
-	address, err := parseArgs()
+	address, err := parseArgsServer()
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(1)

@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-func parseArgs() (address string, port int, err error) {
+func parseArgsClient() (address string, port int, err error) {
 	const cfgFilename = "upd_server.cfg"
 	if len(os.Args) == 1 {
 		cfg, err := ioutil.ReadFile("upd_server.cfg")
@@ -36,7 +36,7 @@ func parseArgs() (address string, port int, err error) {
 }
 
 func main() {
-	address, port, err := parseArgs()
+	address, port, err := parseArgsClient()
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(1)

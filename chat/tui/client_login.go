@@ -1,11 +1,12 @@
 package tui
 
 import (
-	"../client"
 	"fmt"
-	"github.com/marcusolsson/tui-go"
 	"log"
 	"os"
+
+	"github.com/LeadNess/net-tools/chat/client"
+	"github.com/marcusolsson/tui-go"
 )
 
 var clientLogo = `

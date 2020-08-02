@@ -1,9 +1,10 @@
 package main
 
 import (
-	"./tui"
 	"log"
 	"os"
+
+	"github.com/LeadNess/net-tools/chat/tui"
 )
 
 func main()  {

@@ -1,12 +1,13 @@
 package tui
 
 import (
-	"../client"
 	"fmt"
-	"github.com/marcusolsson/tui-go"
 	"log"
 	"strings"
 	"time"
+
+	"github.com/LeadNess/net-tools/chat/client"
+	"github.com/marcusolsson/tui-go"
 )
 
 func ChatWindowUI(c *client.TcpChatClient) tui.UI {

@@ -1,13 +1,14 @@
 package main
 
 import (
-	"./tracker"
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/google/gopacket"
 	"log"
 	"os"
+
+	"github.com/LeadNess/net-tools/tracker/tracker"
+	"github.com/google/gopacket"
 )
 
 func main()  {
