@@ -5,5 +5,5 @@ go:
   - '1.14'
   - tip
 
-before_deploy:
+before_install:
   - apt-get install -y libpcap-dev
